@@ -1,4 +1,19 @@
 
+
+#define  GATEWAY_MAC_LENGTH                6
+#define  GATEWAY_PRODUCT_KEY_LENGTH        8
+#define  GATEWAY_HARDWARE_VERSION_LENGTH   2
+#define  GATEWAY_PROTOCOL_VERSION_LENGTH   2
+
+typedef struct 
+{   
+    uint8_t  mac[GATEWAY_MAC_LENGTH];
+    uint8_t  product_key[GATEWAY_PRODUCT_KEY_LENGTH];
+    uint8_t  hardware_version[GATEWAY_HARDWARE_VERSION_LENGTH]; 
+    uint8_t  protocol_version[GATEWAY_PROTOCOL_VERSION_LENGTH];
+}gateway_product_info_t;
+
+gateway_product_info_t gateway_product_info;
 /*
 @echo off
 nrfjprog.exe --family nRF52 --memwr 0x10001088 --val 0x%str:~0,6%
