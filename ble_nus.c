@@ -1,5 +1,6 @@
 #include "nrf_error.h"
 #include "ble_nus.h"
+#include "nrf_delay.h"
 
 uint8_t ble_hvx_notify_buffer_full = 0;
 static void nus_data_handler(ble_nus_evt_t * p_evt)
@@ -23,86 +24,89 @@ static void nus_data_handler(ble_nus_evt_t * p_evt)
    }
 }
 
-static uint32_t ble_send_string(ble_nus_t * p_nus , uint8_t *p_string, uint16_t length)
+static uint32_t Ble_Send_String(ble_nus_t * p_nus, uint8_t * p_string, uint16_t length)
 {
-	uint32_t err_code;
-
-	uint16_t len = length;
-
-	do
-	{
-		err_code = ble_nus_string_send(p_nus,p_string,&len);
-		if( (err_code != NRF_ERROR_INVALID_STATE) && (err_code != NRF_ERROR_BUSY) && (err_code != NRF_ERROR_RESOURCES))
-		{
-
-			APP_ERROR_CHECK(err_code);
-		}
-		if(err_code == NRF_ERROR_RESOURCES)
-        {
+    uint32_t err_code;
+    //NRF_LOG_DEBUG("module send data to cellphone \r\n");
+    //NRF_LOG_HEXDUMP_DEBUG(p_string , length);
+    uint16_t length_point = length;
+    do
+    {		
+          err_code = ble_nus_data_send(p_nus, p_string, &length_point,m_conn_handle);
+          if ( (err_code != NRF_ERROR_INVALID_STATE) && (err_code != NRF_ERROR_BUSY) && (err_code != NRF_ERROR_RESOURCES))
+          {
+            APP_ERROR_CHECK(err_code);
+          }
+          if(err_code == NRF_ERROR_RESOURCES)
+          {
             break;	
-        }
+          }
+                    
+    } while (err_code == NRF_ERROR_BUSY);
 
-
-	}while（err_code == NRF_ERROR_BUSY）
-
-   return err_code;
+    return err_code;
 }
 
-uint16_t send_data_to_smartphone(uint8_t * p_data,uint16_t data_length)
+uint16_t send_data_to_smartphone(uint8_t *array_temp,uint16_t array_length)
 {
-	uint16_t str_len = 0;
-	uint16_t send_cnt = 0;
+    uint16_t strleng = 0;
+    uint16_t send_cnt = 0;
+    uint8_t  Nus_Send_Buf[20];
+    uint32_t err_code;
+              
+    memset(Nus_Send_Buf,0,20);
+    strleng = array_length;
+  
+   if(ble_hvx_notify_buffer_full == 0)
+   {
+      
+      while(strleng>0)
+      {
+          NRF_LOG_INFO("strleng = %d\r\n",strleng);
+          memset(Nus_Send_Buf,0,20);
+          if(strleng > 20)
+          {
+              memcpy(Nus_Send_Buf , (array_temp + send_cnt) , 20);
+              err_code = Ble_Send_String(&m_nus , Nus_Send_Buf ,20);              //BLE_ERROR_NO_TX_BUFFERS
+              if((err_code != NRF_ERROR_INVALID_STATE) && (err_code != NRF_ERROR_RESOURCES))
+              {
+                APP_ERROR_CHECK(err_code);
+              }
+              //nrf_delay_ms(10);
+              if(err_code == NRF_ERROR_RESOURCES)
+              {
+                ble_hvx_notify_buffer_full = 1;
+                //NRF_LOG_INFO("strleng1r = %d\r\n",strleng);
 
-	uint8_t nus_send_buf[20] = {0};
-	uint32_t err_code;
-
-	str_len = data_length;
-
-	if ( ble_hvx_notify_buffer_full == 0 )
-	{
-		while( str_len > 0)
-		{
-           memset(nus_send_buf,0,sizeof(nus_send_buf));
-           if ( str_len > 20)
-           {
-           	   memcpy(nus_send_buf, p_data + send_cnt, 20);
-           	   err_code = ble_send_string(&nus,nus_send_buf,str_len);
-           	  if((err_code != NRF_ERROR_INVALID_STATE) && (err_code != NRF_ERROR_RESOURCES))
+               while(ble_hvx_notify_buffer_full);
+               Ble_Send_String(&m_nus , Nus_Send_Buf ,20);
+              //  return send_cnt;          
+              }
+              send_cnt = send_cnt + 20;
+              strleng =  strleng - 20;
+              //NRF_LOG_INFO("strleng1 = %d\r\n",strleng);
+          }
+          else
+          {
+              memcpy(Nus_Send_Buf , (array_temp + send_cnt) , strleng);
+              err_code = Ble_Send_String(&m_nus , Nus_Send_Buf , strleng);        //BLE_ERROR_NO_TX_BUFFERS
+              if((err_code != NRF_ERROR_INVALID_STATE) && (err_code != NRF_ERROR_RESOURCES))
               {
                 APP_ERROR_CHECK(err_code);
               }
               if(err_code == NRF_ERROR_RESOURCES)
               {
                 ble_hvx_notify_buffer_full = 1;
-                //NRF_LOG_INFO("strleng1r = %d\r\n",strleng);
-                return send_cnt;          
+                //NRF_LOG_INFO("strleng2r = %d\r\n",strleng);
+                  while(ble_hvx_notify_buffer_full);
+                  Ble_Send_String(&m_nus , Nus_Send_Buf , strleng);  
+               // return send_cnt;          
               }
-
-              send_cnt += 20;
-              str_len  -= 20;
-           }
-           else
-           {
-           	 memcpy(nus_send_buf,p_data + send_cnt,str_len);
-           	 err_code = ble_send_string(&nus,nus_send_buf,str_len);
-           	 if((err_code != NRF_ERROR_INVALID_STATE) && (err_code != NRF_ERROR_RESOURCES))
-              {
-                APP_ERROR_CHECK(err_code);
-              }
-              if(err_code == NRF_ERROR_RESOURCES)
-              {
-                ble_hvx_notify_buffer_full = 1;
-                //NRF_LOG_INFO("strleng1r = %d\r\n",strleng);
-                return send_cnt;          
-              }
-
-              send_cnt += str_len;
-              str_len   = 0;
-
-           }
-		}
-	}
-	
-	return send_cnt;
-
+              send_cnt += strleng;
+              strleng =  0;
+              //NRF_LOG_INFO("strleng2 = %d\r\n",strleng);
+          }
+      }
+   }
+   return send_cnt; 
 }
