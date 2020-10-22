@@ -5,7 +5,7 @@ git config --global user.email "804296634@qq.com"
 
 创建新的版本库
 
-git clone http://192.168.1.7/gitlab/embedded/nicholas/test.git
+git clone https://github.com/s804296634/MyLibrary.git
 cd test
 touch README.md
 git add README.md
@@ -17,7 +17,7 @@ git push -u origin master
 
 cd existing_folder
 git init
-git remote add origin http://192.168.1.7/gitlab/embedded/nicholas/test.git
+git remote add origin https://github.com/s804296634/MyLibrary.git
 git add .
 git commit -m "Initial commit"
 git push -u origin master
@@ -26,6 +26,6 @@ git push -u origin master
 
 cd existing_repo
 git remote rename origin old-origin
-git remote add origin http://192.168.1.7/gitlab/embedded/nicholas/test.git
+git remote add origin https://github.com/s804296634/MyLibrary.git
 git push -u origin --all
 git push -u origin --tags
