@@ -8,7 +8,7 @@
 #define COORDINATE_PAGE_MAX_AMOUNT   256
 
 typedef struct //specific coordinate page information 
-{	
+{ 
   uint32_t unique_id;
   uint32_t start_adress;
   uint32_t units_amount;//units amount
@@ -25,13 +25,15 @@ typedef struct //struct of coordinate storage relevant parameters ,the length is
   coordinate_page_info_type_t info[COORDINATE_PAGE_MAX_AMOUNT];
 }boot_page_type_t;
 
-
+#define TC_FILE_ID            0x2000
+#define TC_REC_KEY            0x2001
+#define TC_FLASH_CONFIG_VALID                                   0x42UL
 
 
 uint32_t  user_flash_init(const boot_page_type_t * p_default_config ,boot_page_type_t ** p_config,bool *p_read_flag);
 
 uint32_t  used_flash_config_store();
+uint32_t  user_flash_config_load(boot_page_type_t ** p_data);
 
-uint32_t  user_flash_config_load();
 
 #endif
