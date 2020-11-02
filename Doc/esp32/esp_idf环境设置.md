@@ -28,3 +28,26 @@ ls /dev/ttyUSB*
 
 sudo usermod -a -G dialout user_name 
 user_name 改成当前登陆的用户名
+
+
+### python 问题
+
+
+ubuntu下运行python和python3提示: no module named pip
+
+
+解决办法 1 ：
+apt-get install python3-pip
+
+解决办法 2：
+pip3 intall --update pip 
+
+### 安装 segger
+
+1. wget http://www.segger.com/downloads/embedded-studio/EmbeddedStudio_ARM_Linux_x64
+
+2. tar -xzvf EmbeddedStudio_ARM_Linux_x64
+
+3. cd arm_segger_embedded_studio_<xxx>_linux_x64
+
+4. sudo ./install_segger_embedded_studio
