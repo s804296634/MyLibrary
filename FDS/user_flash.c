@@ -4,12 +4,13 @@
 #include "app_util.h"
 #include "nrf_log.h"
 #include "macros_common.h"
+#include "app_scheduler.h"
 /**@brief Data structure of configuration data stored to flash.
 */
 typedef struct 
 {
   uint32_t valid;
-  boot_page_type_t     boot_page;           // application data block ,which need to storage in flash.
+  user_data_t     user_data;           // application data block ,which need to storage in flash.
 }used_flash_config_data_t;
 
 typedef union
@@ -102,12 +103,12 @@ static void tc_fds_evt_handler(fds_evt_t const * const p_fds_evt)
 }
 
 
-uint32_t  user_flash_init(const boot_page_type_t * p_default_config ,boot_page_type_t ** p_config,bool *p_read_flag )
+uint32_t  user_flash_init(const user_data_t * p_default_config ,user_data_t ** p_config,bool *p_read_flag )
 {
    uint32_t err_code = NRF_SUCCESS;
    
    NRF_LOG_INFO("Initialization\r\n");
-   //RETURN_IF_ERROR(p_default_config);
+  
    if (p_default_config == NULL ) 
    {
      return NRF_ERROR_NULL;
@@ -129,7 +130,7 @@ uint32_t  user_flash_init(const boot_page_type_t * p_default_config ,boot_page_t
 
     while(m_fds_initialized == false)
     {
-       // app_sched_execute();
+       app_sched_execute();
     }
 
     err_code = fds_gc();
@@ -139,7 +140,7 @@ uint32_t  user_flash_init(const boot_page_type_t * p_default_config ,boot_page_t
     }
     while (m_fds_gc_run == false)
     {
-       // app_sched_execute();
+       app_sched_execute();
     }
 
 
@@ -149,7 +150,7 @@ uint32_t  user_flash_init(const boot_page_type_t * p_default_config ,boot_page_t
    {
        fds_record_t        record;
        NRF_LOG_INFO("writing default config\r\n");
-       memcpy(&m_flash_config.data.boot_page,p_default_config,sizeof(boot_page_type_t));
+       memcpy(&m_flash_config.data.user_data,p_default_config,sizeof(user_data_t));
        m_flash_config.data.valid = TC_FLASH_CONFIG_VALID;
 
        record.file_id           = TC_FILE_ID;
@@ -161,12 +162,12 @@ uint32_t  user_flash_init(const boot_page_type_t * p_default_config ,boot_page_t
        err_code = fds_record_write(&m_record_desc, &record);
         RETURN_IF_ERROR(err_code);
 
-        *p_config = &m_flash_config.data.boot_page;
+        *p_config = &m_flash_config.data.user_data;
 
         * p_read_flag = false;
         while(m_fds_write_success != true)
         {
-           // app_sched_execute();
+            app_sched_execute();
         }
    }
    else             // do not exist .
@@ -174,24 +175,42 @@ uint32_t  user_flash_init(const boot_page_type_t * p_default_config ,boot_page_t
      *p_read_flag = true;
       
    }
-   
-
   
-        
-           // 
-
    return err_code;
 }
 
-uint32_t  used_flash_config_store(boot_page_type_t * p_data)
+uint32_t  used_flash_config_store(user_data_t * p_data)
 {
   uint32_t err_code = NRF_SUCCESS;
+  fds_record_t record;
+  
+  NRF_LOG_INFO("storing user flash data");
 
+  NULL_PARAM_CHECK(p_data);
+  memcpy(&m_flash_config.data.user_data,p_data,sizeof(user_data_t));
+
+  m_flash_config.data.valid = TC_FLASH_CONFIG_VALID;
+
+  // set up record.
+  record.file_id = TC_FILE_ID;
+  record.key     = TC_REC_KEY;
+  record.data.p_data = &m_flash_config;
+  record.data.length_words = sizeof(used_flash_config_t)/4;
+
+
+  err_code = fds_record_update(&m_record_desc,&record);
+  if(err_code == FDS_ERR_NO_SPACE_IN_FLASH)
+  {
+    NRF_LOG_INFO("garbage collection\n");
+    fds_gc();
+    err_code = fds_record_update(&m_record_desc,&record);
+  }
+  RETURN_IF_ERROR(err_code);
 
   return err_code;
 }
 
-uint32_t  user_flash_config_load(boot_page_type_t ** p_data)
+uint32_t  user_flash_config_load(user_data_t ** p_data)
 {
    uint32_t err_code = NRF_SUCCESS;
    fds_flash_record_t  flash_record;
@@ -201,34 +220,19 @@ uint32_t  user_flash_config_load(boot_page_type_t ** p_data)
    memset(&ftok, 0x00, sizeof(fds_find_token_t));
    NRF_LOG_INFO("Loading configuration\r\n");
 
-
+   
     err_code = fds_record_find(TC_FILE_ID, TC_REC_KEY, &m_record_desc, &ftok);
-    if ( err_code != NRF_SUCCESS)
-    {
-      NRF_LOG_INFO("fds_record_find fail");
-      return err_code;
-    }
+    RETURN_IF_ERROR(err_code);
 
     err_code = fds_record_open(&m_record_desc, &flash_record);
-    if ( err_code != NRF_SUCCESS)
-    {
-      NRF_LOG_INFO("fds_record_open fail");
-      return err_code;
-    }
+    RETURN_IF_ERROR(err_code);
 
      memcpy(&m_flash_config, flash_record.p_data, sizeof(used_flash_config_t));
 
     err_code = fds_record_close(&m_record_desc);
-    if ( err_code != NRF_SUCCESS)
-    {
-      NRF_LOG_INFO("fds_record_close fail");
-      return err_code;
-    }
+    RETURN_IF_ERROR(err_code);
 
-     *p_data = &m_flash_config.data.boot_page;
+    *p_data = &m_flash_config.data.user_data;
 
-
-
-
-   return err_code;
+    return err_code;
 }
