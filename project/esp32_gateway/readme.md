@@ -29,3 +29,56 @@
 
 
 
+### 云端上报格式
+
+- JSON 包格式
+
+```c
+beacons=[
+  {
+   "devicename":"xBeacon",
+   "type":"ibeacon",
+   "devicemac":"D1010800012E",
+   "gatewaymac":"D11215000109",
+   "rssi":-64,
+   "data1":"0201061AFF4C000215FDA50693A4E24FB1AFCFC6EB0764782527723D07BB",
+   "data2":"080978426561636F6E14162915500B11012C0131D1010800012E27723D07"
+   }
+]
+
+[
+{"devicename":"",
+"type":"rsp",
+"dMac":"CF0821000003",
+"gMac":"D11215000109",
+"rssi":"-88",
+"data1":"",
+"data2":""},
+{"devicename":"",
+86",data1":"0201061AFF4C000215FDA50693A4E24FB1AFCFC6EB0764782527723CDCBB",
+"data2":""},
+
+{"devicename":"",
+"type":"ibeacon",
+"dMac":"D2110600055E","gMac":"D11215000109","rssi":"-90",
+"data1":"0201061AFF4C000215A000FAA00047005A00526D6F62696B65C6430F67BB","data2":""},
+{"devicename":"","type":"ibeacon",
+"dMac":"D2110600055A",
+"gMac":"D11215000109",
+"rssi":"-81",
+"data1":"0201061AFF4C000215A000FAA00047005A00526D6F62696B65C6430F63BB","data2":""},
+
+{"devicename":"",
+"type":"ibeacon",
+"dMac":"D2082400022B",
+"gMac":"D11215000109",
+"rssi":"-85",
+"data1":"0201061AFF4C000215A000FAA00047005A00526D6F62696B65C6430A03BB",
+"data2":""
+}
+]
+
+```
+
+
+
