@@ -19,6 +19,8 @@ source ~/.bashrc  #更新配置
 
 . $HOME/esp/esp-idf/export.sh  # 可将此行代码 写入 /etc/profile 中
 
+sudo vim  /etc/profile
+
 ### 串口号查询
 
 ls /dev/ttyUSB*
